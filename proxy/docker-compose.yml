@@ -1,0 +1,29 @@
+version: '3.3'
+
+services:
+  proxy:
+    build: ./src                # we build our image and tag it as proxy
+    image: proxy:latest
+    restart: always
+    volumes:
+      - certs-data:/certs/live  # contains the .pem-files
+    ports:
+      - "80:80"                 # open for http-requests
+      - "443:443"               # open for https-requests
+      - "8404:8404"             # only for testing
+    networks:
+      proxy:                    # our proxy lives in the proxy-network (defined next)
+
+networks:
+  proxy:                        # our proxy-network is an external one & needs to be created
+    external:                   #   by 'docker network create hosting-network'
+      name: hosting-network
+
+
+volumes:
+  certs-data:                   # include our certificates from the host-folder '/home/certs'
+      driver: local
+      driver_opts:
+        type: 'none'
+        device: '/home/certs'   # change me
+        o: 'bind'
