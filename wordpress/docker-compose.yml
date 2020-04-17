@@ -1,0 +1,60 @@
+version: "3.3"
+
+services:
+  wordpress:
+    image: wordpress:latest
+    hostname: your-domain.tld       # change me
+    depends_on:
+      - db
+    volumes:
+      - wordpress-data:/var/www/html
+    restart: always                 # restart automatically after server restart
+    environment:
+      WORDPRESS_DB_NAME: wordpress      # change me (maybe)
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress      # change me
+      WORDPRESS_DB_PASSWORD: password   # change me
+    networks:
+      internal:
+      proxy:
+        aliases:
+          - wordpress-your_domain_tld   # change me
+
+  db:
+    image: mysql:latest
+    command: '--default-authentication-plugin=mysql_native_password'
+    volumes:
+      - db-data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password     # change me
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: password          # change me
+    networks:
+      - internal
+    cap_add:
+      - SYS_NICE
+    security_opt:
+    - seccomp:unconfined
+
+networks:
+  proxy:
+    external:
+      name: hosting-network             # external proxy network
+  internal:                             # internal network, not neccessary
+    driver: bridge
+
+volumes:
+  db-data:
+      driver: local
+      driver_opts:
+        type: 'none'
+        device: '/home/wordpress/db-data'           # change me
+        o: 'bind'
+  wordpress-data:
+      driver: local
+      driver_opts:
+        type: 'none'
+        device: '/home/wordpress/wordpress-data'    # change me
+        o: 'bind'
